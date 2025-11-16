@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../utils/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Loader2, Image as ImageIcon, Tag, DollarSign, Type } from 'lucide-react';
+import { X, Loader2, Tag, DollarSign, Type } from 'lucide-react';
 import type { Flower } from '../types';
 
 interface UploadFlowerModalProps {
@@ -26,7 +26,6 @@ const UploadFlowerModal: React.FC<UploadFlowerModalProps> = ({ open, onClose, on
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState<string[]>(['']);
@@ -38,14 +37,12 @@ const UploadFlowerModal: React.FC<UploadFlowerModalProps> = ({ open, onClose, on
       setName(flowerToEdit.name);
       setDescription(flowerToEdit.description ?? '');
       setPrice(flowerToEdit.price.toString());
-      setImageUrl(flowerToEdit.image_url ?? '');
       setItems(flowerToEdit.items ?? ['']);
     } else {
       // Reset form for new flower
       setName('');
       setDescription('');
       setPrice('');
-      setImageUrl('');
       setItems(['']);
     }
   }, [flowerToEdit, isEditMode]);
@@ -79,7 +76,6 @@ const UploadFlowerModal: React.FC<UploadFlowerModalProps> = ({ open, onClose, on
         description,
         price: priceNum,
         items,
-        image_url: imageUrl,
       };
 
       if (isEditMode) {
@@ -134,7 +130,6 @@ const UploadFlowerModal: React.FC<UploadFlowerModalProps> = ({ open, onClose, on
               <Input icon={<Tag className="w-5 h-5" />} type="text" placeholder="Flower Name*" value={name} onChange={(e) => setName(e.target.value)} />
               <Input icon={<Type className="w-5 h-5" />} type="text" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
               <Input icon={<DollarSign className="w-5 h-5" />} type="number" placeholder="Price*" value={price} onChange={(e) => setPrice(e.target.value)} />
-              <Input icon={<ImageIcon className="w-5 h-5" />} type="text" placeholder="Image URL" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
               <div>
                 <label className="block text-sm font-semibold mb-2">Items Used*</label>
                 <div className="space-y-2">
