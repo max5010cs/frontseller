@@ -97,8 +97,11 @@ export async function deleteFlower(flowerId: string) {
   return await res.json();
 }
 
-export async function getFlowers(sellerId: string) {
-  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/seller/flowers?seller_id=${sellerId}`);
+export async function getFlowers(sellerId?: string) {
+  const url = sellerId
+    ? `${process.env.BACKEND_URL}/api/v1/seller/flowers?seller_id=${sellerId}`
+    : `${process.env.BACKEND_URL}/api/v1/seller/flowers`;
+  const res = await fetch(url);
   if (!res.ok) throw new Error('Failed to fetch flowers');
   return await res.json();
 }
