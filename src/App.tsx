@@ -129,7 +129,7 @@ function App() {
         </AnimatePresence>
       </main>
 
-      {/* Bottom Navigaton */}
+      {/* Bottom Navigatyeson */}
       <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white/90 backdrop-blur-lg border-t border-gray-200/80 shadow-[0_-1px_4px_rgba(0,0,0,0.05)]">
         <div className="max-w-md mx-auto h-full flex items-center justify-around">
           <NavItem screen="dashboard" currentScreen={screen} setScreen={setScreen} label="Home">

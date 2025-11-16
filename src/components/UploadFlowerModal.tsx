@@ -29,6 +29,7 @@ const UploadFlowerModal: React.FC<UploadFlowerModalProps> = ({ open, onClose, on
   const [imageUrl, setImageUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [items, setItems] = useState<string[]>(['']);
 
   const isEditMode = !!flowerToEdit;
 
@@ -38,17 +39,29 @@ const UploadFlowerModal: React.FC<UploadFlowerModalProps> = ({ open, onClose, on
       setDescription(flowerToEdit.description ?? '');
       setPrice(flowerToEdit.price.toString());
       setImageUrl(flowerToEdit.image_url ?? '');
+      setItems(flowerToEdit.items ?? ['']);
     } else {
       // Reset form for new flower
       setName('');
       setDescription('');
       setPrice('');
       setImageUrl('');
+      setItems(['']);
     }
   }, [flowerToEdit, isEditMode]);
 
+  const handleItemChange = (idx: number, value: string) => {
+    setItems(items => items.map((item, i) => (i === idx ? value : item)));
+  };
+  const handleAddItem = () => {
+    setItems(items => [...items, '']);
+  };
+  const handleRemoveItem = (idx: number) => {
+    setItems(items => items.filter((_, i) => i !== idx));
+  };
+
   const handleSubmit = async () => {
-    if (!name || !price || !imageUrl) {
+    if (!name || !price || items.some(item => !item.trim())) {
       setError('Please fill in all required fields.');
       return;
     }
@@ -65,6 +78,7 @@ const UploadFlowerModal: React.FC<UploadFlowerModalProps> = ({ open, onClose, on
         name,
         description,
         price: priceNum,
+        items,
         image_url: imageUrl,
       };
 
@@ -120,7 +134,27 @@ const UploadFlowerModal: React.FC<UploadFlowerModalProps> = ({ open, onClose, on
               <Input icon={<Tag className="w-5 h-5" />} type="text" placeholder="Flower Name*" value={name} onChange={(e) => setName(e.target.value)} />
               <Input icon={<Type className="w-5 h-5" />} type="text" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
               <Input icon={<DollarSign className="w-5 h-5" />} type="number" placeholder="Price*" value={price} onChange={(e) => setPrice(e.target.value)} />
-              <Input icon={<ImageIcon className="w-5 h-5" />} type="text" placeholder="Image URL*" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+              <Input icon={<ImageIcon className="w-5 h-5" />} type="text" placeholder="Image URL" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+              <div>
+                <label className="block text-sm font-semibold mb-2">Items Used*</label>
+                <div className="space-y-2">
+                  {items.map((item, idx) => (
+                    <div key={idx} className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={item}
+                        onChange={e => handleItemChange(idx, e.target.value)}
+                        placeholder={`Item ${idx + 1}`}
+                        className="flex-1 px-3 py-2 rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                      {items.length > 1 && (
+                        <button type="button" onClick={() => handleRemoveItem(idx)} className="text-error px-2 py-1 rounded hover:bg-error/10">Remove</button>
+                      )}
+                    </div>
+                  ))}
+                  <button type="button" onClick={handleAddItem} className="mt-2 px-3 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-focus">+ Add Item</button>
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-3 mt-8">
