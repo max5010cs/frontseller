@@ -27,11 +27,10 @@ export const api = {
     if (!response.ok) throw new Error('Failed to fetch orders');
     return await response.json();
   },
-  async uploadFlower(flower: Partial<Flower>) {
+  async uploadFlower(formData: FormData) {
     const response = await fetch(`${API_BASE}/seller/flowers`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(flower),
+      body: formData,
     });
     if (!response.ok) throw new Error('Failed to upload flower');
     return await response.json();
@@ -63,4 +62,43 @@ export const api = {
     if (!response.ok) throw new Error('Failed to set pickup');
     return await response.json();
   },
+  async deleteFlower(flowerId: string) {
+    const response = await fetch(`${API_BASE}/seller/flowers/${flowerId}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Failed to delete flower');
+    return await response.json();
+  },
 };
+
+export async function uploadFlower(formData: FormData) {
+  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/seller/flowers`, {
+    method: 'POST',
+    body: formData,
+  });
+  if (!res.ok) throw new Error('Failed to upload flower');
+  return await res.json();
+}
+
+export async function updateFlower(flowerId: string, formData: FormData) {
+  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/seller/flowers/${flowerId}`, {
+    method: 'PUT',
+    body: formData,
+  });
+  if (!res.ok) throw new Error('Failed to update flower');
+  return await res.json();
+}
+
+export async function deleteFlower(flowerId: string) {
+  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/seller/flowers/${flowerId}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Failed to delete flower');
+  return await res.json();
+}
+
+export async function getFlowers(sellerId: string) {
+  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/seller/flowers?seller_id=${sellerId}`);
+  if (!res.ok) throw new Error('Failed to fetch flowers');
+  return await res.json();
+}

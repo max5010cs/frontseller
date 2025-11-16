@@ -16,6 +16,7 @@ export interface Flower {
   description?: string;
   status?: string;
   items?: string[];
+  image_path: string;
 }
 
 export interface CustomRequest {

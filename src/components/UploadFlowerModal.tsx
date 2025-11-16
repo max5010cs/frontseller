@@ -29,6 +29,7 @@ const UploadFlowerModal: React.FC<UploadFlowerModalProps> = ({ open, onClose, on
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState<string[]>(['']);
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const isEditMode = !!flowerToEdit;
 
@@ -57,9 +58,15 @@ const UploadFlowerModal: React.FC<UploadFlowerModalProps> = ({ open, onClose, on
     setItems(items => items.filter((_, i) => i !== idx));
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setImageFile(e.target.files[0]);
+    }
+  };
+
   const handleSubmit = async () => {
-    if (!name || !price || items.some(item => !item.trim())) {
-      setError('Please fill in all required fields.');
+    if (!name || !price || items.some(item => !item.trim()) || !imageFile) {
+      setError('Please fill in all required fields and select an image.');
       return;
     }
     const priceNum = parseFloat(price);
@@ -70,19 +77,19 @@ const UploadFlowerModal: React.FC<UploadFlowerModalProps> = ({ open, onClose, on
     setError(null);
     setUploading(true);
     try {
-      const flowerData = {
-        seller_id: sellerId,
-        name,
-        description,
-        price: priceNum,
-        items,
-      };
+      const formData = new FormData();
+      formData.append('seller_id', sellerId);
+      formData.append('name', name);
+      formData.append('description', description);
+      formData.append('price', priceNum.toString());
+      formData.append('items', JSON.stringify(items));
+      formData.append('image', imageFile);
 
       if (isEditMode) {
-        // await api.updateFlower(flowerToEdit.id, flowerData);
+        // await api.updateFlower(flowerToEdit.id, formData);
         console.log("Update logic to be implemented");
       } else {
-        await api.uploadFlower(flowerData);
+        await api.uploadFlower(formData);
       }
 
       onSuccess();
@@ -149,6 +156,15 @@ const UploadFlowerModal: React.FC<UploadFlowerModalProps> = ({ open, onClose, on
                   ))}
                   <button type="button" onClick={handleAddItem} className="mt-2 px-3 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-focus">+ Add Item</button>
                 </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Flower Image*</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary"
+                />
               </div>
             </div>
 
