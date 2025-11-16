@@ -82,7 +82,7 @@ const UploadFlowerModal: React.FC<UploadFlowerModalProps> = ({ open, onClose, on
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-2"
           onClick={onClose}
         >
           <motion.div
@@ -90,7 +90,7 @@ const UploadFlowerModal: React.FC<UploadFlowerModalProps> = ({ open, onClose, on
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full m-4"
+            className="bg-white/90 rounded-2xl shadow-2xl p-6 max-w-md w-full border border-emerald-100"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
@@ -163,6 +163,12 @@ const UploadFlowerModal: React.FC<UploadFlowerModalProps> = ({ open, onClose, on
                 {uploading ? 'Uploading...' : 'Upload Flower'}
               </button>
             </div>
+            <button
+              onClick={onClose}
+              className="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg text-lg"
+            >
+              Close
+            </button>
           </motion.div>
         </motion.div>
       )}

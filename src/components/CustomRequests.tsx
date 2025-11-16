@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { api } from '../utils/api';
 import { motion } from 'framer-motion';
@@ -39,16 +38,10 @@ const CustomRequests: React.FC<CustomRequestsProps> = ({ sellerId, onBack }) => 
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="font-semibold">Back to Dashboard</span>
-        </button>
-        <h2 className="text-3xl font-bold text-gray-900">Custom Requests</h2>
+    <div className="w-full max-w-md mx-auto px-2">
+      <div className="flex items-center justify-between mb-4">
+        <button className="px-3 py-2 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium" onClick={onBack}>← Back</button>
+        <h2 className="text-xl font-bold text-gray-900">Custom Requests</h2>
       </div>
 
       {loading && (

@@ -38,16 +38,15 @@ const Orders: React.FC<OrdersProps> = ({ sellerId, onBack }) => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="w-full max-w-md mx-auto px-2">
+      <div className="flex items-center justify-between mb-4">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          className="px-3 py-2 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium"
         >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="font-semibold">Back to Dashboard</span>
+          ← Back
         </button>
-        <h2 className="text-3xl font-bold text-gray-900">Your Orders</h2>
+        <h2 className="text-xl font-bold text-gray-900">Orders</h2>
       </div>
 
       {loading && (

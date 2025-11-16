@@ -1,4 +1,3 @@
-
 import { Store, MapPin, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Seller } from '../types';

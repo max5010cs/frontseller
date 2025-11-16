@@ -98,14 +98,12 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 flex">
-      {/* Sidebar Navigation */}
-      <aside className="w-64 bg-white border-r border-gray-200 p-4 flex flex-col">
-        <div className="px-4 py-2 mb-4">
-          <h1 className="text-2xl font-bold tracking-tighter">Flowey</h1>
-        </div>
-        <nav className="flex flex-col space-y-2">
-          <NavItem screen="dashboard" currentScreen={screen} setScreen={setScreen} label="Dashboard">
+    <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
+      {/* Top Navigation (mobile-friendly) */}
+      <nav className="sticky top-0 z-30 bg-white/90 backdrop-blur-lg shadow-sm border-b border-gray-100 flex items-center justify-between px-4 py-2">
+        <span className="text-lg font-bold text-gray-900 tracking-tight">Flowey Seller</span>
+        <div className="flex gap-2">
+          <NavItem screen="dashboard" currentScreen={screen} setScreen={setScreen} label="Home">
             <Home className="w-5 h-5" />
           </NavItem>
           <NavItem screen="products" currentScreen={screen} setScreen={setScreen} label="Products">
@@ -117,14 +115,10 @@ function App() {
           <NavItem screen="orders" currentScreen={screen} setScreen={setScreen} label="Orders">
             <ShoppingCart className="w-5 h-5" />
           </NavItem>
-        </nav>
-        <div className="mt-auto p-4 text-center text-xs text-gray-500">
-          <p>&copy; 2024 Flowey. All rights reserved.</p>
         </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 p-8 overflow-y-auto">
+      </nav>
+      {/* Main Content - mobile responsive */}
+      <main className="flex-1 px-2 py-4 max-w-md mx-auto w-full">
         <AnimatePresence mode="wait">
           <motion.div
             key={screen}
@@ -132,6 +126,7 @@ function App() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="w-full"
           >
             <Suspense
               fallback={
@@ -145,6 +140,9 @@ function App() {
           </motion.div>
         </AnimatePresence>
       </main>
+      <footer className="text-xs text-gray-500 text-center py-2 bg-white/80 border-t border-gray-100 w-full">
+        &copy; 2024 Flowey. All rights reserved.
+      </footer>
     </div>
   );
 }

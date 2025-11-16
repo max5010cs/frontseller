@@ -1,4 +1,3 @@
-
 import { motion } from 'framer-motion';
 import { ArrowRight, User, ShoppingCart, List, Mail } from 'lucide-react';
 
@@ -51,53 +50,18 @@ const NavCard = ({
 );
 
 const SellerDashboard: React.FC<SellerDashboardProps> = ({ seller, setScreen }) => {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-  };
-
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="space-y-6"
-    >
-      <motion.div variants={itemVariants}>
-        <InfoCard seller={seller} />
-      </motion.div>
-
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <NavCard
-          title="Products"
-          onClick={() => setScreen('products')}
-          icon={<List className="w-6 h-6 text-emerald-600" />}
-          color="bg-emerald-100"
-        />
-        <NavCard
-          title="Custom Requests"
-          onClick={() => setScreen('requests')}
-          icon={<Mail className="w-6 h-6 text-amber-600" />}
-          color="bg-amber-100"
-        />
-        <NavCard
-          title="Orders"
-          onClick={() => setScreen('orders')}
-          icon={<ShoppingCart className="w-6 h-6 text-sky-600" />}
-          color="bg-sky-100"
-        />
-      </motion.div>
-    </motion.div>
+    <div className="flex flex-col items-center justify-center min-h-[60vh] px-2 w-full max-w-md mx-auto">
+      <div className="rounded-2xl shadow-lg bg-white/80 p-6 mb-8 w-full text-center">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome, {seller.name}</h2>
+        <div className="text-gray-500 mb-4">Seller ID: <span className="font-mono text-xs">{seller.user_id}</span></div>
+        <div className="flex flex-col gap-3 w-full">
+          <button className="btn-dashboard w-full" onClick={() => setScreen('products')}>Products</button>
+          <button className="btn-dashboard w-full" onClick={() => setScreen('requests')}>Custom Requests</button>
+          <button className="btn-dashboard w-full" onClick={() => setScreen('orders')}>Orders</button>
+        </div>
+      </div>
+    </div>
   );
 };
 
