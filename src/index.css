@@ -2,19 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-@keyframes slide-up {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
+@layer base {
+  body {
+    @apply bg-background text-base-content font-sans;
   }
 }
 
-.animate-slide-up {
-  animation: slide-up 0.3s ease-out;
+.animated-gradient {
+  background: linear-gradient(
+    -45deg,
+    #fce4ec, /* Light Pink */
+    #e8f5e9, /* Light Green */
+    #fff3e0, /* Light Orange */
+    #ede7f6  /* Light Purple */
+  );
+  background-size: 400% 400%;
+  animation: gradient-flow 15s ease infinite;
 }
 
 * {

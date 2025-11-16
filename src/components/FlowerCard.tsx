@@ -1,33 +1,48 @@
-import { useState } from 'react';
-import { Edit, Trash2, MoreVertical, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-
+import { motion } from 'framer-motion';
+import { Edit } from 'lucide-react';
 import type { Flower } from '../types';
 
 interface FlowerCardProps {
   flower: Flower;
-  onUpdate?: () => void;
+  onEdit: () => void;
 }
 
-const StatusBadge = ({ status }: { status: string }) => {
-  const baseClasses = "px-3 py-1 text-xs font-medium rounded-full";
-  const statusClasses = {
-    active: "bg-green-100 text-green-800",
-    inactive: "bg-gray-100 text-gray-800",
-    sold: "bg-blue-100 text-blue-800",
-  };
-  const classes = `${baseClasses} ${statusClasses[status.toLowerCase()] || 'bg-gray-100 text-gray-800'}`;
-  return <span className={classes}>{status}</span>;
-};
-
-const FlowerCard: React.FC<FlowerCardProps> = ({ flower }) => {
+const FlowerCard: React.FC<FlowerCardProps> = ({ flower, onEdit }) => {
   return (
-    <div className="rounded-2xl shadow bg-white/80 border border-emerald-100 p-4 mb-3 w-full">
-      <div className="font-semibold text-base mb-1">{flower.name}</div>
-      <div className="text-sm text-gray-600 mb-1">{flower.description}</div>
-      <div className="text-sm text-gray-600 mb-1">Price: ${flower.price}</div>
-      <img src={flower.image_url} alt={flower.name} className="w-full h-28 object-cover rounded-xl mb-1" />
-    </div>
+    <motion.div
+      className="relative rounded-2xl overflow-hidden shadow-lg group w-full"
+      layout
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
+      whileHover={{ y: -4 }}
+    >
+      <img
+        src={flower.image_url}
+        alt={flower.name}
+        className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+        <h3 className="font-bold text-lg truncate">{flower.name}</h3>
+        <p className="text-sm opacity-90">{flower.description}</p>
+      </div>
+      <div className="absolute top-2 right-2 flex gap-2">
+        <span className="bg-surface/80 backdrop-blur-sm text-primary font-bold text-sm px-3 py-1 rounded-full">
+          ${flower.price.toFixed(2)}
+        </span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+          className="bg-surface/80 backdrop-blur-sm p-2 rounded-full text-primary hover:bg-primary hover:text-white transition-colors"
+        >
+          <Edit className="w-4 h-4" />
+        </button>
+      </div>
+    </motion.div>
   );
 };
 

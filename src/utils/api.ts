@@ -1,3 +1,5 @@
+import type { Flower, Order } from '../types';
+
 const API_BASE = 'https://flowybackend.onrender.com/api/v1';
 
 export const api = {
@@ -10,7 +12,7 @@ export const api = {
     if (!response.ok) throw new Error('Failed to authenticate seller');
     return await response.json();
   },
-  async getFlowers(sellerId: string) {
+  async getFlowers(sellerId: string): Promise<Flower[]> {
     const response = await fetch(`${API_BASE}/seller/flowers?seller_id=${sellerId}`);
     if (!response.ok) throw new Error('Failed to fetch flowers');
     return await response.json();
@@ -20,12 +22,12 @@ export const api = {
     if (!response.ok) throw new Error('Failed to fetch custom requests');
     return await response.json();
   },
-  async getOrders(sellerId: string) {
+  async getOrders(sellerId: string): Promise<Order[]> {
     const response = await fetch(`${API_BASE}/seller/orders?seller_id=${sellerId}`);
     if (!response.ok) throw new Error('Failed to fetch orders');
     return await response.json();
   },
-  async uploadFlower(flower: any) {
+  async uploadFlower(flower: Partial<Flower>) {
     const response = await fetch(`${API_BASE}/seller/flowers`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -34,7 +36,7 @@ export const api = {
     if (!response.ok) throw new Error('Failed to upload flower');
     return await response.json();
   },
-  async addOrder(order: any) {
+  async addOrder(order: Partial<Order>) {
     const response = await fetch(`${API_BASE}/seller/orders`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

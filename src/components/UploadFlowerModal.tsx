@@ -1,45 +1,54 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '../utils/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Loader2 } from 'lucide-react';
+import { X, Loader2, Image as ImageIcon, Tag, DollarSign, Type } from 'lucide-react';
+import type { Flower } from '../types';
 
 interface UploadFlowerModalProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
   sellerId: string;
+  flowerToEdit?: Flower | null;
 }
 
-const Input = (props: React.InputHTMLAttributes<HTMLInputElement>) => (
-  <input
-    {...props}
-    className="w-full px-4 py-3 bg-gray-100 border-2 border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-colors"
-  />
+const Input = (props: React.InputHTMLAttributes<HTMLInputElement> & { icon: React.ReactNode }) => (
+  <div className="relative w-full">
+    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{props.icon}</div>
+    <input
+      {...props}
+      className="w-full pl-11 pr-4 py-3 bg-neutral/60 border-2 border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white transition-colors"
+    />
+  </div>
 );
 
-const UploadFlowerModal: React.FC<UploadFlowerModalProps> = ({ open, onClose, onSuccess, sellerId }) => {
-  const [imageUrl, setImageUrl] = useState('');
+const UploadFlowerModal: React.FC<UploadFlowerModalProps> = ({ open, onClose, onSuccess, sellerId, flowerToEdit }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
-  const [items, setItems] = useState<string[]>([]);
-  const [currentItem, setCurrentItem] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleAddItem = () => {
-    if (currentItem.trim()) {
-      setItems([...items, currentItem.trim()]);
-      setCurrentItem('');
-    }
-  };
+  const isEditMode = !!flowerToEdit;
 
-  const handleRemoveItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index));
-  };
+  useEffect(() => {
+    if (isEditMode && flowerToEdit) {
+      setName(flowerToEdit.name);
+      setDescription(flowerToEdit.description ?? '');
+      setPrice(flowerToEdit.price.toString());
+      setImageUrl(flowerToEdit.image_url ?? '');
+    } else {
+      // Reset form for new flower
+      setName('');
+      setDescription('');
+      setPrice('');
+      setImageUrl('');
+    }
+  }, [flowerToEdit, isEditMode]);
 
   const handleSubmit = async () => {
-    if (!imageUrl || !name || !price) {
+    if (!name || !price || !imageUrl) {
       setError('Please fill in all required fields.');
       return;
     }
@@ -51,25 +60,26 @@ const UploadFlowerModal: React.FC<UploadFlowerModalProps> = ({ open, onClose, on
     setError(null);
     setUploading(true);
     try {
-      await api.uploadFlower({
+      const flowerData = {
         seller_id: sellerId,
-        image_url: imageUrl,
         name,
         description,
         price: priceNum,
-        items,
-      });
-      // Reset form
-      setImageUrl('');
-      setName('');
-      setDescription('');
-      setPrice('');
-      setItems([]);
-      setCurrentItem('');
+        image_url: imageUrl,
+      };
+
+      if (isEditMode) {
+        // await api.updateFlower(flowerToEdit.id, flowerData);
+        console.log("Update logic to be implemented");
+      } else {
+        await api.uploadFlower(flowerData);
+      }
+
       onSuccess();
       onClose();
     } catch (err) {
-      setError('Failed to upload flower. Please try again.');
+      console.error(`Failed to ${isEditMode ? 'update' : 'upload'} flower:`, err);
+      setError(`Failed to ${isEditMode ? 'update' : 'upload'} flower. Please try again.`);
     } finally {
       setUploading(false);
     }
@@ -82,93 +92,54 @@ const UploadFlowerModal: React.FC<UploadFlowerModalProps> = ({ open, onClose, on
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-2"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm"
           onClick={onClose}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="bg-white/90 rounded-2xl shadow-2xl p-6 max-w-md w-full border border-emerald-100"
+            initial={{ y: '100%' }}
+            animate={{ y: '0%' }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 150 }}
+            className="bg-surface rounded-t-3xl shadow-2xl p-6 max-w-md w-full"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Upload a New Flower</h2>
-              <button onClick={onClose} className="p-2 rounded-full text-gray-500 hover:bg-gray-100">
+              <h2 className="text-xl font-bold text-base-content">{isEditMode ? 'Edit Flower' : 'Add New Flower'}</h2>
+              <button onClick={onClose} className="p-2 rounded-full text-gray-500 hover:bg-neutral">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {error && (
-              <div className="bg-red-50 text-red-700 rounded-lg p-3 text-sm mb-4">
+              <div className="bg-error/10 text-error rounded-lg p-3 text-sm mb-4 text-center">
                 {error}
               </div>
             )}
 
             <div className="space-y-4">
-              <Input type="text" placeholder="Image URL*" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
-              <Input type="text" placeholder="Flower Name*" value={name} onChange={(e) => setName(e.target.value)} />
-              <Input type="text" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
-              <Input type="number" placeholder="Price*" value={price} onChange={(e) => setPrice(e.target.value)} />
-
-              <div>
-                <div className="flex gap-2">
-                  <Input
-                    type="text"
-                    placeholder="Add item (e.g., rose, tulip)"
-                    value={currentItem}
-                    onChange={(e) => setCurrentItem(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleAddItem()}
-                  />
-                  <button
-                    onClick={handleAddItem}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
-                  >
-                    <Plus className="w-5 h-5" />
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {items.map((item, idx) => (
-                    <motion.span
-                      key={idx}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="flex items-center gap-2 bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-sm font-medium"
-                    >
-                      {item}
-                      <button onClick={() => handleRemoveItem(idx)} className="text-emerald-600 hover:text-emerald-800">
-                        <X className="w-3 h-3" />
-                      </button>
-                    </motion.span>
-                  ))}
-                </div>
-              </div>
+              <Input icon={<Tag className="w-5 h-5" />} type="text" placeholder="Flower Name*" value={name} onChange={(e) => setName(e.target.value)} />
+              <Input icon={<Type className="w-5 h-5" />} type="text" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
+              <Input icon={<DollarSign className="w-5 h-5" />} type="number" placeholder="Price*" value={price} onChange={(e) => setPrice(e.target.value)} />
+              <Input icon={<ImageIcon className="w-5 h-5" />} type="text" placeholder="Image URL*" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
             </div>
 
             <div className="flex gap-3 mt-8">
               <button
                 onClick={onClose}
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-neutral transition-colors"
                 disabled={uploading}
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit}
-                className="flex-1 bg-emerald-600 text-white px-4 py-3 rounded-xl font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                className="flex-1 bg-primary text-primary-content px-4 py-3 rounded-xl font-semibold hover:bg-primary-focus transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
                 disabled={uploading}
               >
                 {uploading && <Loader2 className="w-5 h-5 animate-spin" />}
-                {uploading ? 'Uploading...' : 'Upload Flower'}
+                {uploading ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Add Flower')}
               </button>
             </div>
-            <button
-              onClick={onClose}
-              className="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg text-lg"
-            >
-              Close
-            </button>
           </motion.div>
         </motion.div>
       )}
