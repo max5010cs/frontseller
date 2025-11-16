@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from './services/api';
+import { api } from './utils/api';
 import SellerDashboard from './components/SellerDashboard';
 import ProductList from './components/ProductList';
 import CustomRequests from './components/CustomRequests';
