@@ -1,41 +1,94 @@
-import React, { useEffect, useState } from 'react';
+
+import { useEffect, useState } from 'react';
 import { api } from '../utils/api';
+import { motion } from 'framer-motion';
+import { Loader2, ArrowLeft, Package } from 'lucide-react';
+import { CustomRequest } from '../types';
+import CustomRequestCard from './CustomRequestCard';
 
 interface CustomRequestsProps {
-  seller: any;
+  sellerId: string;
   onBack: () => void;
 }
 
-const CustomRequests: React.FC<CustomRequestsProps> = ({ seller, onBack }) => {
-  const [requests, setRequests] = useState<any[]>([]);
+const CustomRequests: React.FC<CustomRequestsProps> = ({ sellerId, onBack }) => {
+  const [requests, setRequests] = useState<CustomRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchRequests = () => {
     setLoading(true);
     api.getCustomRequests()
       .then(setRequests)
       .catch(() => setError('Failed to load custom requests'))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchRequests();
   }, []);
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08,
+      },
+    },
+  };
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center animate-fade-in">
-      <button className="mb-4 btn" onClick={onBack}>← Back</button>
-      <h2 className="text-xl font-bold mb-4">Custom Requests</h2>
-      {loading && <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mb-4"></div>}
-      {error && <div className="text-red-500 mb-4">{error}</div>}
-      <div className="w-full max-w-lg space-y-4">
-        {requests.length === 0 && !loading && <div className="text-gray-500">No custom requests yet.</div>}
-        {requests.map((req, idx) => (
-          <div key={idx} className="p-4 rounded-xl shadow bg-white/80 border border-emerald-100 transition-all duration-300 hover:scale-[1.02]">
-            <div className="font-semibold">{req.buyer_name}</div>
-            <div className="text-sm text-gray-600">Prompt: {req.prompt}</div>
-            <div className="text-sm text-gray-600">Items: {req.items?.join(', ')}</div>
-            <img src={req.image_url} alt={req.buyer_name} className="w-full h-32 object-cover rounded-lg mt-2" />
-          </div>
-        ))}
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span className="font-semibold">Back to Dashboard</span>
+        </button>
+        <h2 className="text-3xl font-bold text-gray-900">Custom Requests</h2>
       </div>
+
+      {loading && (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="animate-spin text-amber-500 h-8 w-8" />
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-50 text-red-700 rounded-2xl p-8 text-center">
+          <h3 className="text-lg font-semibold mb-2">⚠️ Error</h3>
+          <p>{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && requests.length === 0 && (
+        <div className="text-center h-64 flex flex-col justify-center items-center bg-white rounded-2xl shadow-sm border border-gray-100">
+          <Package className="w-16 h-16 text-gray-300 mb-4" />
+          <h3 className="text-xl font-semibold text-gray-800">No Custom Requests</h3>
+          <p className="text-gray-500">There are currently no custom requests available.</p>
+        </div>
+      )}
+
+      {!loading && !error && requests.length > 0 && (
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          {requests.map((request) => (
+            <CustomRequestCard
+              key={request.id}
+              request={request}
+              sellerId={sellerId}
+              onBidSubmitted={fetchRequests}
+            />
+          ))}
+        </motion.div>
+      )}
     </div>
   );
 };

@@ -1,119 +1,95 @@
 import { useState } from 'react';
-import { Edit, Trash2, MoreVertical } from 'lucide-react';
+import { Edit, Trash2, MoreVertical, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
 import type { Flower } from '../types';
 
 interface FlowerCardProps {
   flower: Flower;
   onUpdate?: () => void;
-  lang?: string;
 }
 
-export default function FlowerCard({ flower, onUpdate, lang }: FlowerCardProps) {
+const StatusBadge = ({ status }: { status: string }) => {
+  const baseClasses = "px-3 py-1 text-xs font-medium rounded-full";
+  const statusClasses = {
+    active: "bg-green-100 text-green-800",
+    inactive: "bg-gray-100 text-gray-800",
+    sold: "bg-blue-100 text-blue-800",
+  };
+  const classes = `${baseClasses} ${statusClasses[status.toLowerCase()] || 'bg-gray-100 text-gray-800'}`;
+  return <span className={classes}>{status}</span>;
+};
+
+const FlowerCard: React.FC<FlowerCardProps> = ({ flower, onUpdate }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this flower?')) return;
-
     setDeleting(true);
-    // Code related to supabase has been removed
+    // Here you would typically call an API to delete the flower
+    // await api.deleteFlower(flower.id);
+    console.log(`Deleting flower ${flower.id}`);
     onUpdate && onUpdate();
     setDeleting(false);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'inactive':
-        return 'bg-gray-100 text-gray-800';
-      case 'sold':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+    setShowMenu(false);
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-      <div className="flex gap-4 p-4">
-        <div className="w-24 h-24 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
-          <img
-            src={flower.image || flower.image_url}
-            alt={flower.name}
-            className="w-full h-full object-cover"
-          />
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 truncate">{flower.name}</h3>
-              {flower.description && (
-                <p className="text-sm text-gray-600 line-clamp-2 mt-1">
-                  {flower.description}
-                </p>
-              )}
-            </div>
-
-            <div className="relative">
-              <button
-                onClick={() => setShowMenu(!showMenu)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <MoreVertical className="w-5 h-5 text-gray-600" />
-              </button>
-
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      whileHover={{ y: -4, scale: 1.02 }}
+      transition={{ type: 'spring', stiffness: 300 }}
+      className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+    >
+      <div className="h-48 w-full overflow-hidden">
+        <img src={flower.image_url} alt={flower.name} className="w-full h-full object-cover" />
+      </div>
+      <div className="p-5">
+        <div className="flex items-start justify-between">
+          <h3 className="font-bold text-lg text-gray-800 truncate">{flower.name}</h3>
+          <div className="relative">
+            <button onClick={() => setShowMenu(!showMenu)} className="p-2 rounded-full hover:bg-gray-100">
+              <MoreVertical className="w-5 h-5 text-gray-500" />
+            </button>
+            <AnimatePresence>
               {showMenu && (
-                <>
-                  <div
-                    className="fixed inset-0 z-10"
-                    onClick={() => setShowMenu(false)}
-                  ></div>
-                  <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-20 min-w-[140px]">
-                    <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-gray-700">
-                      <Edit className="w-4 h-4" />
-                      Edit
-                    </button>
-                    <button
-                      onClick={handleDelete}
-                      disabled={deleting}
-                      className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-red-600 disabled:opacity-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      {deleting ? 'Deleting...' : 'Delete'}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 mt-3">
-            <span className="text-lg font-bold text-green-600">${flower.price}</span>
-            <span
-              className={`px-2 py-1 rounded-lg text-xs font-medium ${getStatusColor(
-                flower.status || 'active'
-              )}`}
-            >
-              {flower.status || 'active'}
-            </span>
-          </div>
-
-          {Array.isArray(flower.items) && flower.items.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {flower.items.map((item, index) => (
-                <span
-                  key={index}
-                  className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-lg"
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.1 }}
+                  className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-20 min-w-[140px]"
                 >
-                  {item}
-                </span>
-              ))}
-            </div>
-          )}
+                  <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-gray-700">
+                    <Edit className="w-4 h-4" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-red-600 disabled:opacity-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    {deleting ? 'Deleting...' : 'Delete'}
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+        <p className="text-gray-500 text-sm h-10 my-1 overflow-hidden">{flower.description}</p>
+        <div className="flex items-center justify-between mt-4">
+          <span className="text-xl font-semibold text-emerald-600">${flower.price}</span>
+          <StatusBadge status={flower.status || 'active'} />
         </div>
       </div>
-    </div>
+      {showMenu && <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)}></div>}
+    </motion.div>
   );
-}
+};
+
+export default FlowerCard;

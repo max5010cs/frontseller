@@ -1,18 +1,92 @@
-import { useEffect, useState } from 'react';
-import { Package, Flower2, ShoppingBag, Plus } from 'lucide-react';
+import { useEffect, useState, Suspense, lazy } from 'react';
+import { motion } from 'framer-motion';
 import { api } from '../utils/api';
 import type { Flower, CustomRequest, Order } from '../types';
-import FlowerCard from './FlowerCard';
-import CustomRequestCard from './CustomRequestCard';
-import OrderCard from './OrderCard';
-import UploadFlowerModal from './UploadFlowerModal';
+import { Loader2, Flower2, Package, ShoppingBag, Plus, ArrowRight } from 'lucide-react';
+
+const UploadFlowerModal = lazy(() => import('./UploadFlowerModal'));
 
 interface DashboardProps {
   sellerId: string;
-  lang: string;
+  setScreen: (screen: 'dashboard' | 'products' | 'requests' | 'orders') => void;
 }
 
-export default function Dashboard({ sellerId, lang }: DashboardProps) {
+const StatCard = ({
+  title,
+  value,
+  icon,
+  color,
+  onClick,
+}: {
+  title: string;
+  value: number | string;
+  icon: React.ReactNode;
+  color: string;
+  onClick: () => void;
+}) => (
+  <motion.div
+    whileHover={{ scale: 1.05, y: -5 }}
+    transition={{ type: 'spring', stiffness: 300 }}
+    className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 cursor-pointer"
+    onClick={onClick}
+  >
+    <div className="flex items-center justify-between">
+      <div className={`p-3 rounded-lg bg-opacity-10 ${color}`}>
+        {icon}
+      </div>
+      <span className="text-3xl font-bold text-gray-800">{value}</span>
+    </div>
+    <h3 className="text-lg font-medium text-gray-600 mt-4">{title}</h3>
+  </motion.div>
+);
+
+const RecentActivityCard = ({
+  items,
+  title,
+  icon,
+  emptyText,
+  onViewAll,
+}: {
+  items: (Flower | Order | CustomRequest)[];
+  title: string;
+  icon: React.ReactNode;
+  emptyText: string;
+  onViewAll: () => void;
+}) => (
+  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-3">
+        {icon}
+        <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+      </div>
+      <button onClick={onViewAll} className="text-sm font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
+        View All <ArrowRight className="w-4 h-4" />
+      </button>
+    </div>
+    <div className="space-y-3">
+      {items.length > 0 ? (
+        items.slice(0, 3).map((item) => (
+          <div key={item.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+            <p className="font-medium text-gray-700">
+              {'name' in item ? item.name : `Order #${item.id.substring(0, 8)}`}
+            </p>
+            <p className="text-sm text-gray-500">
+              {'price' in item && item.price
+                ? `${item.price.toFixed(2)}`
+                : 'created_at' in item
+                ? new Date(item.created_at).toLocaleDateString()
+                : ''}
+            </p>
+          </div>
+        ))
+      ) : (
+        <p className="text-gray-500 text-center py-4">{emptyText}</p>
+      )}
+    </div>
+  </div>
+);
+
+const Dashboard: React.FC<DashboardProps> = ({ sellerId, setScreen }) => {
   const [flowers, setFlowers] = useState<Flower[]>([]);
   const [customRequests, setCustomRequests] = useState<CustomRequest[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -21,145 +95,137 @@ export default function Dashboard({ sellerId, lang }: DashboardProps) {
   const [showUploadModal, setShowUploadModal] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    Promise.all([
-      api.getFlowers(sellerId, lang).then(setFlowers),
-      api.getCustomRequests(lang).then(setCustomRequests),
-      api.getOrders(sellerId, lang).then(setOrders),
-    ])
-      .catch(() => setError('Failed to load dashboard data.'))
-      .finally(() => setLoading(false));
-  }, [sellerId, lang]);
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [flowersData, requestsData, ordersData] = await Promise.all([
+          api.getFlowers(sellerId),
+          api.getCustomRequests(),
+          api.getOrders(sellerId),
+        ]);
+        setFlowers(flowersData);
+        setCustomRequests(requestsData);
+        setOrders(ordersData);
+      } catch (err) {
+        setError('Failed to load dashboard data. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [sellerId]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="animate-spin text-emerald-500 h-8 w-8" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center">
-        <div className="text-center bg-white rounded-2xl p-8 shadow-lg max-w-md">
-          <div className="text-red-600 text-5xl mb-4">⚠️</div>
-          <p className="text-gray-900 font-semibold mb-2">Error Loading Dashboard</p>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={() => {
-              setFlowers([]);
-              setCustomRequests([]);
-              setOrders([]);
-              setLoading(false);
-            }}
-            className="bg-green-600 text-white px-6 py-2 rounded-xl font-medium hover:bg-green-700 transition-colors"
-          >
-            Try Again
-          </button>
-        </div>
+      <div className="flex flex-col items-center justify-center h-full bg-red-50 text-red-700 rounded-2xl p-8">
+        <h3 className="text-lg font-semibold mb-2">⚠️ Error</h3>
+        <p>{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50">
-      <div className="max-w-6xl mx-auto px-4 py-6 pb-24">
-        <div className="space-y-6">
-          {/* Flowers Section */}
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Flower2 className="w-6 h-6 text-green-600" />
-                <h2 className="text-xl font-bold text-gray-900">My Flowers</h2>
-              </div>
-              <button
-                onClick={() => setShowUploadModal(true)}
-                className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-xl font-medium hover:bg-green-700 transition-colors shadow-lg shadow-green-600/30"
-              >
-                <Plus className="w-5 h-5" />
-                Upload
-              </button>
-            </div>
-            {flowers.length === 0 ? (
-              <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
-                <Flower2 className="w-16 h-16 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">No flowers uploaded yet</p>
-                <button
-                  onClick={() => setShowUploadModal(true)}
-                  className="mt-4 text-green-600 font-medium hover:text-green-700"
-                >
-                  Upload your first flower
-                </button>
-              </div>
-            ) : (
-              <div className="grid gap-4">
-                {flowers.map((flower) => (
-                  <FlowerCard key={flower.id} flower={flower} onUpdate={() => {}} />
-                ))}
-              </div>
-            )}
-          </section>
-          {/* Custom Requests Section */}
-          <section>
-            <div className="flex items-center gap-2 mb-4">
-              <Package className="w-6 h-6 text-orange-600" />
-              <h2 className="text-xl font-bold text-gray-900">Custom Requests</h2>
-            </div>
-            {customRequests.length === 0 ? (
-              <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
-                <Package className="w-16 h-16 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">No custom requests available</p>
-              </div>
-            ) : (
-              <div className="grid gap-4">
-                {customRequests.map((request) => (
-                  <CustomRequestCard
-                    key={request.id}
-                    request={request}
-                    sellerId={sellerId}
-                    onBidSubmitted={() => {}}
-                    lang={lang}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-          {/* Orders Section */}
-          <section>
-            <div className="flex items-center gap-2 mb-4">
-              <ShoppingBag className="w-6 h-6 text-blue-600" />
-              <h2 className="text-xl font-bold text-gray-900">Orders</h2>
-            </div>
-            {orders.length === 0 ? (
-              <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
-                <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">No pending orders</p>
-              </div>
-            ) : (
-              <div className="grid gap-4">
-                {orders.map((order) => (
-                  <OrderCard key={order.id} order={order} onUpdate={() => {}} />
-                ))}
-              </div>
-            )}
-          </section>
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={{
+        hidden: { opacity: 0 },
+        visible: {
+          opacity: 1,
+          transition: {
+            staggerChildren: 0.1,
+          },
+        },
+      }}
+      className="space-y-8"
+    >
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
+          <p className="text-gray-500 mt-1">Welcome back, here's a summary of your store.</p>
         </div>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowUploadModal(true)}
+          className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-3 rounded-xl font-semibold shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 transition-colors"
+        >
+          <Plus className="w-5 h-5" />
+          Upload Flower
+        </motion.button>
       </div>
-      {showUploadModal && (
-        <UploadFlowerModal
-          open={showUploadModal}
-          sellerId={sellerId}
-          onClose={() => setShowUploadModal(false)}
-          onSuccess={() => {
-            setShowUploadModal(false);
-          }}
+
+      <motion.div
+        variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+        className="grid grid-cols-1 md:grid-cols-3 gap-6"
+      >
+        <StatCard
+          title="My Products"
+          value={flowers.length}
+          icon={<Flower2 className="w-6 h-6 text-emerald-600" />}
+          color="bg-emerald-100"
+          onClick={() => setScreen('products')}
         />
+        <StatCard
+          title="Custom Requests"
+          value={customRequests.length}
+          icon={<Package className="w-6 h-6 text-amber-600" />}
+          color="bg-amber-100"
+          onClick={() => setScreen('requests')}
+        />
+        <StatCard
+          title="Pending Orders"
+          value={orders.length}
+          icon={<ShoppingCart className="w-6 h-6 text-sky-600" />}
+          color="bg-sky-100"
+          onClick={() => setScreen('orders')}
+        />
+      </motion.div>
+
+      <motion.div
+        variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+      >
+        <RecentActivityCard
+          title="Recent Listings"
+          items={flowers}
+          icon={<Flower2 className="w-5 h-5 text-gray-500" />}
+          emptyText="No flowers listed yet."
+          onViewAll={() => setScreen('products')}
+        />
+        <RecentActivityCard
+          title="Recent Orders"
+          items={orders}
+          icon={<ShoppingCart className="w-5 h-5 text-gray-500" />}
+          emptyText="No new orders."
+          onViewAll={() => setScreen('orders')}
+        />
+      </motion.div>
+
+      {showUploadModal && (
+        <Suspense fallback={<div></div>}>
+          <UploadFlowerModal
+            open={showUploadModal}
+            sellerId={sellerId}
+            onClose={() => setShowUploadModal(false)}
+            onSuccess={() => {
+              setShowUploadModal(false);
+              // Consider re-fetching data here if needed
+            }}
+          />
+        </Suspense>
       )}
-    </div>
+    </motion.div>
   );
-}
+};
+
+export default Dashboard;

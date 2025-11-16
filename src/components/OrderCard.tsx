@@ -1,14 +1,28 @@
 import { useState } from 'react';
-import { Calendar, Clock, User } from 'lucide-react';
-import type { Order } from '../types';
+import { Calendar, Clock, X, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../utils/api';
+import type { Order } from '../types';
 
 interface OrderCardProps {
   order: Order;
   onUpdate: () => void;
 }
 
-export default function OrderCard({ order, onUpdate }: OrderCardProps) {
+const StatusBadge = ({ status }: { status: string }) => {
+  const baseClasses = "px-3 py-1 text-xs font-medium rounded-full";
+  const statusClasses = {
+    pending_pickup: "bg-yellow-100 text-yellow-800",
+    confirmed: "bg-blue-100 text-blue-800",
+    completed: "bg-green-100 text-green-800",
+    cancelled: "bg-red-100 text-red-800",
+  };
+  const formattedStatus = status.toLowerCase().replace(' ', '_');
+  const classes = `${baseClasses} ${statusClasses[formattedStatus] || 'bg-gray-100 text-gray-800'}`;
+  return <span className={classes}>{status}</span>;
+};
+
+const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdate }) => {
   const [showPickupModal, setShowPickupModal] = useState(false);
   const [pickupDate, setPickupDate] = useState('');
   const [pickupTime, setPickupTime] = useState('');
@@ -17,7 +31,7 @@ export default function OrderCard({ order, onUpdate }: OrderCardProps) {
 
   const handleSetPickupTime = async () => {
     if (!pickupDate || !pickupTime) {
-      alert('Please select both date and time');
+      setError('Please select both date and time.');
       return;
     }
     const pickupDateTime = new Date(`${pickupDate}T${pickupTime}`).toISOString();
@@ -26,146 +40,108 @@ export default function OrderCard({ order, onUpdate }: OrderCardProps) {
     try {
       await api.setPickup(order.id, pickupDateTime);
       onUpdate();
-      alert('Pickup time confirmed and buyer notified!');
+      setShowPickupModal(false);
     } catch (e) {
-      setError('Failed to set pickup');
+      setError('Failed to set pickup time. Please try again.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending_pickup':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'confirmed':
-        return 'bg-blue-100 text-blue-800';
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'pending_pickup':
-        return 'Pending';
-      case 'confirmed':
-        return 'Confirmed';
-      case 'completed':
-        return 'Completed';
-      default:
-        return status;
-    }
-  };
-
   return (
     <>
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-        <div className="p-4">
-          <div className="flex gap-4">
-            <div className="w-24 h-24 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
-              <img
-                src={order.image_url}
-                alt="Order"
-                className="w-full h-full object-cover"
-              />
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        whileHover={{ y: -4, scale: 1.02 }}
+        transition={{ type: 'spring', stiffness: 300 }}
+        className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col"
+      >
+        <div className="p-5 flex-grow">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm text-gray-500">Order #{order.id}</p>
+              <p className="font-semibold text-gray-800">From: {order.buyer_name}</p>
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-gray-400" />
-                    <h3 className="font-semibold text-gray-900">{order.buyer_name}</h3>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Order #{order.id.slice(0, 8)}
-                  </p>
-                </div>
-                <span
-                  className={`px-2 py-1 rounded-lg text-xs font-medium ${getStatusColor(
-                    order.status
-                  )}`}
-                >
-                  {getStatusText(order.status)}
-                </span>
-              </div>
-              <div className="flex items-center gap-1 mb-3">
-                <span className="text-xl font-bold text-green-600">${order.price}</span>
-              </div>
-              {order.pickup_time ? (
-                <div className="flex items-center gap-2 text-sm text-gray-600 bg-blue-50 px-3 py-2 rounded-lg">
-                  <Calendar className="w-4 h-4" />
-                  <span>
-                    {new Date(order.pickup_time).toLocaleDateString()} at{' '}
-                    {new Date(order.pickup_time).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowPickupModal(true)}
-                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-xl font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                >
-                  <Clock className="w-4 h-4" />
-                  Set Pickup Time
-                </button>
-              )}
-            </div>
+            <StatusBadge status={order.status} />
+          </div>
+          <div className="flex items-center justify-between mt-4">
+            <span className="text-xl font-semibold text-sky-600">${order.price}</span>
+            <p className="text-sm text-gray-500">{new Date(order.created_at).toLocaleDateString()}</p>
           </div>
         </div>
-      </div>
-      {showPickupModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md p-6 animate-slide-up">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Set Pickup Time</h3>
-            <div className="space-y-4">
+        <div className="p-5 bg-gray-50 border-t border-gray-100">
+          {order.pickup_time ? (
+            <div className="flex items-center gap-3 text-sm text-gray-600">
+              <Calendar className="w-5 h-5 text-blue-500" />
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  value={pickupDate}
-                  onChange={(e) => setPickupDate(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                />
+                <p className="font-semibold">Pickup Scheduled</p>
+                <p>
+                  {new Date(order.pickup_time).toLocaleDateString()} at{' '}
+                  {new Date(order.pickup_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Time
-                </label>
-                <input
-                  type="time"
-                  value={pickupTime}
-                  onChange={(e) => setPickupTime(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                />
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowPickupModal(true)}
+              className="w-full bg-sky-600 text-white px-4 py-2.5 rounded-lg font-semibold hover:bg-sky-700 transition-colors flex items-center justify-center gap-2"
+            >
+              <Clock className="w-5 h-5" />
+              Set Pickup Time
+            </button>
+          )}
+        </div>
+      </motion.div>
+
+      <AnimatePresence>
+        {showPickupModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowPickupModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full m-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Set Pickup Time</h2>
+                <button onClick={() => setShowPickupModal(false)} className="p-2 rounded-full text-gray-500 hover:bg-gray-100">
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={() => setShowPickupModal(false)}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                >
+
+              {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+
+              <div className="space-y-4">
+                <input type="date" value={pickupDate} onChange={(e) => setPickupDate(e.target.value)} min={new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 bg-gray-100 border-2 border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition-colors" />
+                <input type="time" value={pickupTime} onChange={(e) => setPickupTime(e.target.value)} className="w-full px-4 py-3 bg-gray-100 border-2 border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition-colors" />
+              </div>
+
+              <div className="flex gap-3 mt-8">
+                <button onClick={() => setShowPickupModal(false)} className="flex-1 px-4 py-3 border border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-100 transition-colors" disabled={submitting}>
                   Cancel
                 </button>
-                <button
-                  onClick={handleSetPickupTime}
-                  disabled={submitting || !pickupDate || !pickupTime}
-                  className="flex-1 bg-blue-600 text-white px-4 py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {submitting ? 'Confirming...' : 'Confirm'}
+                <button onClick={handleSetPickupTime} disabled={submitting || !pickupDate || !pickupTime} className="flex-1 bg-sky-600 text-white px-4 py-3 rounded-xl font-semibold hover:bg-sky-700 transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
+                  {submitting && <Loader2 className="w-5 h-5 animate-spin" />}
+                  {submitting ? 'Confirming...' : 'Confirm Pickup'}
                 </button>
               </div>
-              {error && <div className="text-red-500">{error}</div>}
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
-}
+};
+
+export default OrderCard;

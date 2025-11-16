@@ -53,4 +53,5 @@ export interface Order {
   buyer_name?: string;
   image_url?: string;
   pickup_time?: string;
+  created_at: string;
 }
