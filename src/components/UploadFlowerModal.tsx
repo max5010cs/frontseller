@@ -85,9 +85,8 @@ const UploadFlowerModal: React.FC<UploadFlowerModalProps> = ({ open, onClose, on
       formData.append('items', JSON.stringify(items));
       formData.append('image', imageFile);
 
-      if (isEditMode) {
-        // await api.updateFlower(flowerToEdit.id, formData);
-        console.log("Update logic to be implemented");
+      if (isEditMode && flowerToEdit) {
+        await api.updateFlower(flowerToEdit.id, formData);
       } else {
         await api.uploadFlower(formData);
       }
@@ -95,7 +94,6 @@ const UploadFlowerModal: React.FC<UploadFlowerModalProps> = ({ open, onClose, on
       onSuccess();
       onClose();
     } catch (err) {
-      console.error(`Failed to ${isEditMode ? 'update' : 'upload'} flower:`, err);
       setError(`Failed to ${isEditMode ? 'update' : 'upload'} flower. Please try again.`);
     } finally {
       setUploading(false);

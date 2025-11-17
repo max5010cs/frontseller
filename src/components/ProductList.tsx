@@ -44,6 +44,18 @@ const ProductList: React.FC<ProductListProps> = ({ sellerId, onBack }) => {
     fetchFlowers();
   };
 
+  const handleRemove = async (flower: Flower) => {
+    if (window.confirm('Are you sure you want to delete this flower?')) {
+      await api.deleteFlower(flower.id);
+      fetchFlowers();
+    }
+  };
+
+  const handleEdit = (flower: Flower) => {
+    setSelectedFlower(flower);
+    setIsModalOpen(true);
+  };
+
   return (
     <div className="w-full max-w-md mx-auto px-2">
       <div className="flex items-center justify-between mb-4">
@@ -70,13 +82,8 @@ const ProductList: React.FC<ProductListProps> = ({ sellerId, onBack }) => {
             <FlowerCard
               key={flower.id}
               flower={flower}
-              onEdit={() => handleOpenModal(flower)}
-              onRemove={async () => {
-                if (window.confirm('Are you sure you want to delete this flower?')) {
-                  await api.deleteFlower(flower.id);
-                  fetchFlowers();
-                }
-              }}
+              onEdit={() => handleEdit(flower)}
+              onRemove={() => handleRemove(flower)}
             />
           ))}
         </div>
