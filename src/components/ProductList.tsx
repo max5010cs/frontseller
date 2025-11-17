@@ -46,7 +46,7 @@ const ProductList: React.FC<ProductListProps> = ({ sellerId, onBack }) => {
 
   const handleRemove = async (flower: Flower) => {
     if (window.confirm('Are you sure you want to delete this flower?')) {
-      await api.deleteFlower(flower.id, sellerId);
+      await api.deleteFlower(flower.id, String(sellerId));
       fetchFlowers();
     }
   };

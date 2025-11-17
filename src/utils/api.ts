@@ -62,9 +62,10 @@ export const api = {
     if (!response.ok) throw new Error('Failed to set pickup');
     return await response.json();
   },
-  async deleteFlower(flowerId: string) {
+  async deleteFlower(flowerId: string, sellerId: string) {
     const response = await fetch(`${API_BASE}/seller/flowers/${flowerId}`, {
       method: 'DELETE',
+      body: new URLSearchParams({ seller_id: sellerId }),
     });
     if (!response.ok) throw new Error('Failed to delete flower');
     return await response.json();
@@ -77,48 +78,4 @@ export const api = {
     if (!response.ok) throw new Error('Failed to update flower');
     return await response.json();
   },
-  async deleteFlowerWithSeller(flowerId: string, sellerId: string) {
-    const response = await fetch(`${API_BASE}/seller/flowers/${flowerId}`, {
-      method: 'DELETE',
-      body: new URLSearchParams({ seller_id: sellerId }),
-    });
-    if (!response.ok) throw new Error('Failed to delete flower');
-    return await response.json();
-  },
 };
-
-export async function uploadFlower(formData: FormData) {
-  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/seller/flowers`, {
-    method: 'POST',
-    body: formData,
-  });
-  if (!res.ok) throw new Error('Failed to upload flower');
-  return await res.json();
-}
-
-export async function updateFlower(flowerId: string, formData: FormData) {
-  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/seller/flowers/${flowerId}`, {
-    method: 'PUT',
-    body: formData,
-  });
-  if (!res.ok) throw new Error('Failed to update flower');
-  return await res.json();
-}
-
-export async function deleteFlower(flowerId: string, sellerId: string) {
-  const response = await fetch(`https://flowybackend.onrender.com/api/v1/seller/flowers/${flowerId}`, {
-    method: 'DELETE',
-    body: new URLSearchParams({ seller_id: sellerId }),
-  });
-  if (!response.ok) throw new Error('Failed to delete flower');
-  return await response.json();
-}
-
-export async function getFlowers(sellerId?: string) {
-  const url = sellerId
-    ? `${process.env.BACKEND_URL}/api/v1/seller/flowers?seller_id=${sellerId}`
-    : `${process.env.BACKEND_URL}/api/v1/seller/flowers`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('Failed to fetch flowers');
-  return await res.json();
-}
