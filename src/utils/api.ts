@@ -105,12 +105,13 @@ export async function updateFlower(flowerId: string, formData: FormData) {
   return await res.json();
 }
 
-export async function deleteFlower(flowerId: string) {
-  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/seller/flowers/${flowerId}`, {
+export async function deleteFlower(flowerId: string, sellerId: string) {
+  const response = await fetch(`https://flowybackend.onrender.com/api/v1/seller/flowers/${flowerId}`, {
     method: 'DELETE',
+    body: new URLSearchParams({ seller_id: sellerId }),
   });
-  if (!res.ok) throw new Error('Failed to delete flower');
-  return await res.json();
+  if (!response.ok) throw new Error('Failed to delete flower');
+  return await response.json();
 }
 
 export async function getFlowers(sellerId?: string) {
