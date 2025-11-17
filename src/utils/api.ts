@@ -69,6 +69,22 @@ export const api = {
     if (!response.ok) throw new Error('Failed to delete flower');
     return await response.json();
   },
+  async updateFlower(flowerId: string, formData: FormData) {
+    const response = await fetch(`${API_BASE}/seller/flowers/${flowerId}`, {
+      method: 'PUT',
+      body: formData,
+    });
+    if (!response.ok) throw new Error('Failed to update flower');
+    return await response.json();
+  },
+  async deleteFlowerWithSeller(flowerId: string, sellerId: string) {
+    const response = await fetch(`${API_BASE}/seller/flowers/${flowerId}`, {
+      method: 'DELETE',
+      body: new URLSearchParams({ seller_id: sellerId }),
+    });
+    if (!response.ok) throw new Error('Failed to delete flower');
+    return await response.json();
+  },
 };
 
 export async function uploadFlower(formData: FormData) {
