@@ -2,6 +2,8 @@ import { motion } from 'framer-motion';
 import { Edit } from 'lucide-react';
 import type { Flower } from '../types';
 
+const IMAGE_BASE_URL = "https://flowybackend.onrender.com";
+
 interface FlowerCardProps {
   flower: Flower;
   onEdit: () => void;
@@ -20,7 +22,7 @@ const FlowerCard: React.FC<FlowerCardProps> = ({ flower, onEdit, onRemove }) => 
       whileHover={{ y: -4 }}
     >
       <img
-        src={flower.image_path ? `${process.env.BACKEND_URL}/${flower.image_path}` : ''}
+        src={flower.image_path ? `${IMAGE_BASE_URL}${flower.image_path}` : ''}
         alt={flower.name}
         className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
       />
