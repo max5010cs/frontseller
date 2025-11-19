@@ -53,11 +53,14 @@ function App() {
     try {
       setAuthLog('Verifying seller...');
       const data = await api.authenticateSeller(encryptedId);
-      if (data.profile) {
-        setSeller(data.profile);
+      console.log('Seller auth response:', data);
+      // Defensive: check for both string and number user_id
+      if (data && typeof data === 'object' && data.seller && data.seller.user_id !== undefined && data.seller.user_id !== null) {
+        setSeller(data.seller);
         setAuthLog('Welcome!');
       } else {
         setAuthLog('Seller not found.');
+        console.error('Seller not found in response:', data);
       }
     } catch (error) {
       console.error("Authentication error:", error);
@@ -68,7 +71,6 @@ function App() {
   if (!seller) {
     return (
       <motion.div
-        className="min-h-screen flex flex-col items-center justify-center animated-gradient"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -129,7 +131,7 @@ function App() {
         </AnimatePresence>
       </main>
 
-      {/* Bottom Navigatyeson */}
+      {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white/90 backdrop-blur-lg border-t border-gray-200/80 shadow-[0_-1px_4px_rgba(0,0,0,0.05)]">
         <div className="max-w-md mx-auto h-full flex items-center justify-around">
           <NavItem screen="dashboard" currentScreen={screen} setScreen={setScreen} label="Home">
